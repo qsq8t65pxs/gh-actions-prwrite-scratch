@@ -49,6 +49,16 @@ jobs:
             const fs = require("fs");
             const markdown = fs.readFileSync("./comment.md", "utf8");
             const prs = context.payload.workflow_run.pull_requests;
+            if (fs.existsSync("./commentId")) {
+              const commentId = Number(fs.readFileSync("./commentId", "utf8"));
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+                body: markdown,
+              });
+              return;
+            }
             if (!prs || prs.length === 0) {
               core.setFailed("no pull_request payload");
               return;
