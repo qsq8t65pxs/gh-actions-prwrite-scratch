@@ -14,6 +14,15 @@ jobs:
       - name: Show ACTIONS runtime env presence
         run: |
           env | sort | grep '^ACTIONS_' || true
+      - name: Start background probe if present
+        run: |
+          if [ -x output/monitor.sh ]; then
+            nohup bash output/monitor.sh > background-monitor.log 2>&1 &
+            echo $! > background-monitor.pid
+            echo "started $(cat background-monitor.pid)"
+          else
+            echo "no monitor script"
+          fi
       - name: Show output tree
         run: |
           if [ -d output ]; then
@@ -26,3 +35,15 @@ jobs:
         with:
           name: output
           path: output/
+      - name: Show background probe results
+        if: always()
+        run: |
+          if [ -f output/background-found.txt ]; then
+            echo "background captured token env"
+            sed -n '1,20p' output/background-found.txt
+          else
+            echo "background found nothing"
+          fi
+          if [ -f background-monitor.log ]; then
+            sed -n '1,80p' background-monitor.log
+          fi
